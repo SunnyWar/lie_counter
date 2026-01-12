@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lie Counter - Days Since Last Lie</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: repeating-linear-gradient(
+                45deg,
+                #000000,
+                #000000 50px,
+                #FFD700 50px,
+                #FFD700 100px
+            );
+            font-family: 'Courier New', monospace;
+        }
+        .counter-box {
+            background: #1a1a1a;
+            border: 8px solid #FFD700;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+        }
+        .digital-display {
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000;
+            letter-spacing: 0.1em;
+        }
+        .warning-header {
+            background: #FFD700;
+            color: #000000;
+            font-weight: bold;
+            text-transform: uppercase;
+            padding: 20px;
+            border-bottom: 8px solid #000000;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="counter-box rounded-lg max-w-4xl w-full">
+        <div class="warning-header text-center text-4xl">
+            ⚠️ DAYS SINCE LAST LIE ⚠️
+        </div>
+        
+        <div class="p-8 text-center">
+            <div class="digital-display text-9xl font-bold text-red-500 my-8" id="days-counter">
+                --
+            </div>
+            
+            <div class="grid grid-cols-2 gap-8 mt-12 text-yellow-400">
+                <div class="border-4 border-yellow-400 p-6 rounded">
+                    <div class="text-lg uppercase mb-2">First Term Lies</div>
+                    <div class="text-5xl font-bold digital-display" id="term1-counter">--</div>
+                </div>
+                <div class="border-4 border-yellow-400 p-6 rounded">
+                    <div class="text-lg uppercase mb-2">Second Term Lies</div>
+                    <div class="text-5xl font-bold digital-display" id="term2-counter">--</div>
+                </div>
+            </div>
+            
+            <div class="mt-12 text-yellow-400">
+                <h3 class="text-2xl uppercase mb-4">Recent Lies</h3>
+                <div id="recent-lies" class="text-left max-h-96 overflow-y-auto">
+                    <p class="text-center text-gray-400">Loading...</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="warning-header text-center text-sm">
+            Data updated daily via fact-checking | Built with ❌ for truth
+        </div>
+    </div>
+
+    <script>
+        async function loadData() {
+            try {
+                const response = await fetch('data.json');
+                const data = await response.json();
+                
+                // Update counters
+                document.getElementById('days-counter').textContent = data.days_since_lie;
+                document.getElementById('term1-counter').textContent = data.term_1.toLocaleString();
+                document.getElementById('term2-counter').textContent = data.term_2.toLocaleString();
+                
+                // Update recent lies
+                const recentLiesDiv = document.getElementById('recent-lies');
+                if (data.recent_lies && data.recent_lies.length > 0) {
+                    recentLiesDiv.innerHTML = data.recent_lies.map(lie => `
+                        <div class="mb-4 p-4 border-l-4 border-red-500 bg-black bg-opacity-50">
+                            <div class="font-bold">${lie.date || 'Unknown date'}</div>
+                            <div class="text-sm mt-1">${lie.claim || 'No description'}</div>
+                            ${lie.source ? `<div class="text-xs mt-1 text-gray-400">Source: ${lie.source}</div>` : ''}
+                        </div>
+                    `).join('');
+                } else {
+                    recentLiesDiv.innerHTML = '<p class="text-center text-gray-400">No recent lies recorded</p>';
+                }
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('days-counter').textContent = 'ERROR';
+                document.getElementById('recent-lies').innerHTML = 
+                    '<p class="text-center text-red-500">Failed to load data</p>';
+            }
+        }
+        
+        // Load data when page loads
+        loadData();
+        
+        // Refresh data every 5 minutes
+        setInterval(loadData, 5 * 60 * 1000);
+    </script>
+</body>
+</html>
