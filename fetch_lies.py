@@ -6,21 +6,39 @@ This script checks for false claims about Donald Trump in the last 24 hours.
 
 import json
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Any
 import requests
 
 
 def load_data() -> Dict[str, Any]:
     """Load the current data from data.json"""
-    with open('data.json', 'r') as f:
-        return json.load(f)
+    try:
+        with open('data.json', 'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        print("Error: data.json not found. Creating default data.")
+        default_data = {
+            "days_since_lie": 0,
+            "term_1": 30573,
+            "term_2": 0,
+            "recent_lies": []
+        }
+        save_data(default_data)
+        return default_data
+    except json.JSONDecodeError as e:
+        print(f"Error: data.json is malformed: {e}")
+        raise
 
 
 def save_data(data: Dict[str, Any]) -> None:
     """Save updated data to data.json"""
-    with open('data.json', 'w') as f:
-        json.dump(data, f, indent=2)
+    try:
+        with open('data.json', 'w') as f:
+            json.dump(data, f, indent=2)
+    except IOError as e:
+        print(f"Error: Failed to write data.json: {e}")
+        raise
 
 
 def fetch_fact_checks(api_key: str, query: str = "Donald Trump") -> List[Dict[str, Any]]:
@@ -61,7 +79,7 @@ def check_for_recent_false_claims(claims: List[Dict[str, Any]]) -> List[Dict[str
     Returns:
         List of false claims from the last 24 hours
     """
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     cutoff_time = now - timedelta(days=1)
     recent_false_claims = []
     
