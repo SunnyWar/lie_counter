@@ -63,6 +63,10 @@
         const STORAGE_KEY_LIES = 'totalLies';
         const STORAGE_KEY_LAST_LIE = 'lastLieDate';
         const STORAGE_KEY_START_DATE = 'powerStartDate';
+        const DEFAULT_START_DATE = '2025-01-20';
+        const MILLISECONDS_PER_DAY = 1000 * 60 * 60 * 24;
+        const NOTIFICATION_DISPLAY_TIME = 2000;
+        const NOTIFICATION_REMOVE_TIME = 2500;
 
         // Initialize the counter on page load
         document.addEventListener('DOMContentLoaded', function() {
@@ -73,9 +77,9 @@
         });
 
         function initializeCounter() {
-            // Set default start date if not set (January 20, 2025)
+            // Set default start date if not set
             if (!localStorage.getItem(STORAGE_KEY_START_DATE)) {
-                localStorage.setItem(STORAGE_KEY_START_DATE, '2025-01-20');
+                localStorage.setItem(STORAGE_KEY_START_DATE, DEFAULT_START_DATE);
             }
             
             // Initialize total lies if not set
@@ -127,7 +131,7 @@
             today.setHours(0, 0, 0, 0);
             
             const diffTime = today - pastDate;
-            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            const diffDays = Math.floor(diffTime / MILLISECONDS_PER_DAY);
             
             return diffDays;
         }
@@ -160,9 +164,6 @@
         }
 
         function showNotification(message) {
-            const NOTIFICATION_DISPLAY_TIME = 2000;
-            const NOTIFICATION_REMOVE_TIME = 2500;
-            
             // Create notification element
             const notification = document.createElement('div');
             notification.textContent = message;
