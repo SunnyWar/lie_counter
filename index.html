@@ -160,22 +160,25 @@
         }
 
         function showNotification(message) {
+            const NOTIFICATION_DISPLAY_TIME = 2000;
+            const NOTIFICATION_REMOVE_TIME = 2500;
+            
             // Create notification element
             const notification = document.createElement('div');
             notification.textContent = message;
-            notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg transform transition-all duration-300';
+            notification.classList.add('fixed', 'top-4', 'right-4', 'bg-green-500', 'text-white', 'px-6', 'py-3', 'rounded-lg', 'shadow-lg', 'transform', 'transition-all', 'duration-300');
             document.body.appendChild(notification);
             
-            // Animate in
+            // Animate out
             setTimeout(() => {
                 notification.style.opacity = '0';
                 notification.style.transform = 'translateY(-20px)';
-            }, 2000);
+            }, NOTIFICATION_DISPLAY_TIME);
             
             // Remove from DOM
             setTimeout(() => {
-                document.body.removeChild(notification);
-            }, 2500);
+                notification.remove();
+            }, NOTIFICATION_REMOVE_TIME);
         }
     </script>
 </body>
