@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lie Counter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-4xl w-full">
+        <!-- Main Title -->
+        <h1 class="text-4xl md:text-6xl font-bold text-center text-white mb-12">
+            Lie Counter
+        </h1>
+
+        <!-- Counter Cards Container -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <!-- Days Since Last Lie Card -->
+            <div class="bg-gradient-to-br from-red-500 to-red-700 rounded-2xl shadow-2xl p-8 transform transition hover:scale-105">
+                <h2 class="text-2xl font-semibold text-white mb-4 text-center">Days Since Last Lie</h2>
+                <div class="text-6xl md:text-7xl font-bold text-white text-center" id="daysSinceLastLie">
+                    0
+                </div>
+                <p class="text-white text-center mt-4 opacity-90" id="lastLieDate">
+                    Last lie: Never
+                </p>
+            </div>
+
+            <!-- Total Lies Card -->
+            <div class="bg-gradient-to-br from-orange-500 to-orange-700 rounded-2xl shadow-2xl p-8 transform transition hover:scale-105">
+                <h2 class="text-2xl font-semibold text-white mb-4 text-center">Total Lies</h2>
+                <div class="text-6xl md:text-7xl font-bold text-white text-center" id="totalLies">
+                    0
+                </div>
+                <p class="text-white text-center mt-4 opacity-90" id="sinceDate">
+                    Since taking power
+                </p>
+            </div>
+        </div>
+
+        <!-- Control Buttons -->
+        <div class="flex flex-wrap gap-4 justify-center">
+            <button onclick="recordLie()" 
+                    class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transform transition hover:scale-105">
+                Record a Lie
+            </button>
+            <button onclick="resetCounters()" 
+                    class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transform transition hover:scale-105">
+                Reset Counters
+            </button>
+        </div>
+
+        <!-- Info Section -->
+        <div class="mt-12 bg-gray-800 bg-opacity-50 rounded-lg p-6 text-center">
+            <p class="text-gray-300 text-sm">
+                This counter tracks the number of lies and days since the last recorded lie.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const STORAGE_KEY_LIES = 'totalLies';
+        const STORAGE_KEY_LAST_LIE = 'lastLieDate';
+        const STORAGE_KEY_START_DATE = 'powerStartDate';
+
+        // Initialize the counter on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCounter();
+            updateDisplay();
+            // Update days since last lie every minute
+            setInterval(updateDisplay, 60000);
+        });
+
+        function initializeCounter() {
+            // Set default start date if not set (January 20, 2025)
+            if (!localStorage.getItem(STORAGE_KEY_START_DATE)) {
+                localStorage.setItem(STORAGE_KEY_START_DATE, '2025-01-20');
+            }
+            
+            // Initialize total lies if not set
+            if (!localStorage.getItem(STORAGE_KEY_LIES)) {
+                localStorage.setItem(STORAGE_KEY_LIES, '0');
+            }
+        }
+
+        function updateDisplay() {
+            // Update total lies
+            const totalLies = parseInt(localStorage.getItem(STORAGE_KEY_LIES) || '0');
+            document.getElementById('totalLies').textContent = totalLies.toLocaleString();
+
+            // Update days since last lie
+            const lastLieDate = localStorage.getItem(STORAGE_KEY_LAST_LIE);
+            if (lastLieDate) {
+                const daysSince = calculateDaysSince(lastLieDate);
+                document.getElementById('daysSinceLastLie').textContent = daysSince.toLocaleString();
+                
+                const formattedDate = new Date(lastLieDate).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                document.getElementById('lastLieDate').textContent = `Last lie: ${formattedDate}`;
+            } else {
+                document.getElementById('daysSinceLastLie').textContent = '0';
+                document.getElementById('lastLieDate').textContent = 'Last lie: Never';
+            }
+
+            // Update since date
+            const startDate = localStorage.getItem(STORAGE_KEY_START_DATE);
+            if (startDate) {
+                const formattedStartDate = new Date(startDate).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                document.getElementById('sinceDate').textContent = `Since ${formattedStartDate}`;
+            }
+        }
+
+        function calculateDaysSince(dateString) {
+            const pastDate = new Date(dateString);
+            const today = new Date();
+            
+            // Reset time to midnight for accurate day calculation
+            pastDate.setHours(0, 0, 0, 0);
+            today.setHours(0, 0, 0, 0);
+            
+            const diffTime = today - pastDate;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            
+            return diffDays;
+        }
+
+        function recordLie() {
+            // Increment total lies
+            const currentTotal = parseInt(localStorage.getItem(STORAGE_KEY_LIES) || '0');
+            localStorage.setItem(STORAGE_KEY_LIES, (currentTotal + 1).toString());
+            
+            // Set last lie date to today
+            const today = new Date().toISOString().split('T')[0];
+            localStorage.setItem(STORAGE_KEY_LAST_LIE, today);
+            
+            // Update display
+            updateDisplay();
+            
+            // Show confirmation
+            showNotification('Lie recorded!');
+        }
+
+        function resetCounters() {
+            if (confirm('Are you sure you want to reset all counters? This cannot be undone.')) {
+                localStorage.removeItem(STORAGE_KEY_LIES);
+                localStorage.removeItem(STORAGE_KEY_LAST_LIE);
+                localStorage.removeItem(STORAGE_KEY_START_DATE);
+                initializeCounter();
+                updateDisplay();
+                showNotification('Counters reset!');
+            }
+        }
+
+        function showNotification(message) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.textContent = message;
+            notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg transform transition-all duration-300';
+            document.body.appendChild(notification);
+            
+            // Animate in
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateY(-20px)';
+            }, 2000);
+            
+            // Remove from DOM
+            setTimeout(() => {
+                document.body.removeChild(notification);
+            }, 2500);
+        }
+    </script>
+</body>
+</html>
